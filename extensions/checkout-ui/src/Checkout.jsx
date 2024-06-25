@@ -12,7 +12,9 @@ import {
   BlockSpacer,
   Heading,
   Divider,
-  useApplyMetafieldsChange
+  useApplyMetafieldsChange,
+  useExtension,
+  useCartLines
 } from '@shopify/ui-extensions-react/checkout';
 import { useState, useEffect } from 'react';
 
@@ -21,16 +23,26 @@ export default reactExtension(
   () => <Extension />,
 );
 
-const customerId = '8255250039067'
-const SERVER_URL = 'https://hang-parameters-ata-modem.trycloudflare.com'
-
 
 function Extension() {
-  const { query } = useApi();
+
+  const { query, buyerIdentity } = useApi();
+
+  const { scriptUrl } = useExtension();
+  const cartDetails = useCartLines();
+
+  // extract customer , product and url  details 
+  const customerId = buyerIdentity?.customer?.current?.id?.split('/')?.pop();
+  const productId = cartDetails[0]?.merchandise?.product?.id;
+  const SERVER_URL = scriptUrl.split('/').slice(0, 3).join('/').split('.com')[0] + '.com';
+
+  console.log("Customer Id :", customerId);
+  console.log("Product Id :", productId);
+  console.log("Server Url :", SERVER_URL);
+
 
   const [showMore, setShowMore] = useState(true);
   const [selectedNpos, setSelectedNpos] = useState([]);
-  const [apiData, setApiData] = useState(null);
   const [showWarning, setShowWarning] = useState(false);
   const [showNpo, setShowNpos] = useState(false);
   const [previousData, setPreviousData] = useState([]);
@@ -63,20 +75,36 @@ function Extension() {
         }
       }`,
       {
-        variables: { id: "gid://shopify/Product/9047205151003" },
+        variables: { id: `${productId}` },
       }
     )
-      .then(({ data, errors }) => {
+      .then(async ({ data, errors }) => {
         if (errors) {
           console.log('Product MetaFelids fetch Error : ', errors);
         }
 
         const metaFieldsDetails = data?.product?.metafields;
         if (metaFieldsDetails) {
-          const filedArray = metaFieldsDetails
+          let filedArray = metaFieldsDetails
             .filter(metaFieldsDetail => metaFieldsDetail?.value)
             .flatMap(metaFieldsDetail => metaFieldsDetail.value.split(',').map(item => item.trim()));
-          setMetaFields(filedArray);
+          filedArray = filedArray?.includes("emptyNpos") ? [] : filedArray
+          console.log("Product Fetched MetaFields :", filedArray);
+          // check fetched npos valid or not 
+          const config = {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ npos: filedArray })
+          }
+          await fetch(`${SERVER_URL}/npo-valid`, config)
+            .then((response) => response.json())
+            .then((result) => {
+              console.log('Valid NPOS :', result);
+              setMetaFields(result.npos);
+            })
+            .catch((error) => { console.log('Error In Valid NPOS :', error); })
         }
       })
       .catch((error) => console.error('Product MetaFelids fetch Error : ', error))
@@ -85,18 +113,20 @@ function Extension() {
 
   let afterSixData = metaFields?.slice(6, metaFields.length);
 
-
   useEffect(() => {
     const fetchData = async () => {
-
-      await fetch(`${SERVER_URL}/customer-order?customerId=${customerId}`)
-        .then((response) => response.text())
-        .then((result) => {
-          setPreviousLoading(false);
-          console.log('Previous NPOS :', result);
-          setPreviousData(result ? JSON.parse(result) : [])
-        })
-        .catch((error) => { setPreviousLoading(false); console.log('Error In Previous NPOS :', error); })
+      if (customerId) {
+        await fetch(`${SERVER_URL}/customer-order?customerId=${customerId}`)
+          .then((response) => response.text())
+          .then((result) => {
+            setPreviousLoading(false);
+            console.log('Previous NPOS :', result);
+            setPreviousData(result ? JSON.parse(result) : [])
+          })
+          .catch((error) => { setPreviousLoading(false); console.log('Error In Previous NPOS :', error); })
+      } else {
+        setPreviousLoading(false)
+      }
     }
     fetchData()
   }, []);
@@ -104,9 +134,10 @@ function Extension() {
 
   useEffect(() => {
     const convertedData = previousData?.npos && previousData?.npos[0]?.split(',').map(item => item.trim());
-    setSelectedNpos(convertedData || [])
+    const filteredData = convertedData?.filter(item => metaFields?.includes(item));
+    setSelectedNpos(filteredData || [])
     console.log("Npo Converted Data:", convertedData);
-  }, [previousData])
+  }, [previousData, metaFields])
 
 
   const handleCheckboxChange = (e, val) => {
@@ -135,15 +166,16 @@ function Extension() {
   console.log("Selected Npos :", selectedNpos);
 
   const updateMetafieldWithCheckedValues = () => {
-    const checkedValues = selectedNpos.join(', ');
-    console.log(checkedValues, '--------------checkedValues');
-    updateMetafield({
-      type: "updateMetafield",
-      namespace: 'custom',
-      key: 'ngo_data',
-      valueType: "string",
-      value: checkedValues,
-    });
+    if (showNpo) {
+      const checkedValues = selectedNpos.join(', ');
+      updateMetafield({
+        type: "updateMetafield",
+        namespace: 'custom',
+        key: 'ngo_data',
+        valueType: "string",
+        value: checkedValues,
+      });
+    }
   };
 
 

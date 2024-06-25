@@ -1,0 +1,28 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "36b22cae89e766261bb59686cf451314"
+name = "checkout-3"
+handle = "checkout-397"
+application_url = "https://responded-cause-chen-destinations.trycloudflare.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "itgdev.myshopify.com"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_products"
+
+[auth]
+redirect_urls = [
+  "https://responded-cause-chen-destinations.trycloudflare.com/auth/callback",
+  "https://responded-cause-chen-destinations.trycloudflare.com/auth/shopify/callback",
+  "https://responded-cause-chen-destinations.trycloudflare.com/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2024-04"
+
+[pos]
+embedded = false
