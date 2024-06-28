@@ -33,7 +33,8 @@ function Extension() {
 
   // extract customer , product and url  details 
   const customerId = buyerIdentity?.customer?.current?.id?.split('/')?.pop();
-  const productId = cartDetails[0]?.merchandise?.product?.id;
+  // const productId = cartDetails[0]?.merchandise?.product?.id ;
+  const productId = process.env.PRODUCT_ID;
   const SERVER_URL = scriptUrl.split('/').slice(0, 3).join('/').split('.com')[0] + '.com';
 
   console.log("Customer Id :", customerId);

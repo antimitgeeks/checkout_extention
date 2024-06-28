@@ -10,7 +10,7 @@ export const loader = async ({ request }) => {
     // Return a JSON response with a welcome message
     const fetch = (await import('node-fetch')).default;
     const myHeaders = new Headers();
-    myHeaders.append("X-Shopify-Access-Token", process.env.ADMIN_TOKEN);
+    myHeaders.append("X-Shopify-Access-Token", process.env.STORE_ACCESS_TOKEN);
 
     const requestOptions = {
         method: "GET",
@@ -19,12 +19,12 @@ export const loader = async ({ request }) => {
     };
 
     try {
-        const response = await fetch(`https://itgdev.myshopify.com/admin/api/2024-04/customers/${customerId}.json`, requestOptions);
+        const response = await fetch(`https://${process.env.STORE_NAME}.myshopify.com/admin/api/${process.env.STORE_VERSION}/customers/${customerId}.json`, requestOptions);
         const result = await response.json();
         if (result?.customer) {
             const orderId = result.customer.last_order_id;
             if (orderId) {
-                const response = await fetch(`https://itgdev.myshopify.com/admin/api/2024-01/orders/${orderId}/metafields.json`, requestOptions);
+                const response = await fetch(`https://${process.env.STORE_NAME}.myshopify.com/admin/api/${process.env.STORE_VERSION}/orders/${orderId}/metafields.json`, requestOptions);
                 const result = await response.json();
                 const orderMetaFileds = result.metafields
                 if (orderMetaFileds?.length) {

@@ -3,7 +3,7 @@
 client_id = "a366c7e47fe32e0e5632f664cd5f1eab"
 name = "checkout-2"
 handle = "checkout-391"
-application_url = "https://avg-the-himself-spain.trycloudflare.com"
+application_url = "https://integral-excellence-photographer-arranged.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://avg-the-himself-spain.trycloudflare.com/auth/callback",
-  "https://avg-the-himself-spain.trycloudflare.com/auth/shopify/callback",
-  "https://avg-the-himself-spain.trycloudflare.com/api/auth/callback"
+  "https://integral-excellence-photographer-arranged.trycloudflare.com/auth/callback",
+  "https://integral-excellence-photographer-arranged.trycloudflare.com/auth/shopify/callback",
+  "https://integral-excellence-photographer-arranged.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
